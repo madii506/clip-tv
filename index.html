@@ -58,7 +58,7 @@ section[id]{scroll-margin-top:86px}
 .nav .wrap{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
            gap:12px;height:64px}
 .brand{display:flex;align-items:center;gap:10px;text-decoration:none}
-.brand img{width:34px;height:34px;border-radius:0}
+.brand img{width:30px;height:30px;border-radius:0}
 .brand b{font-size:23px;font-weight:1000;letter-spacing:-.02em}
 .nav ul{list-style:none;display:flex;justify-content:center;gap:4px;margin:0;padding:0}
 .nav ul a{display:block;padding:8px 13px;text-decoration:none;font-size:14.5px;
@@ -242,6 +242,14 @@ details p{margin:0;padding:0 17px 16px;font-size:14.5px;font-weight:600;color:va
            letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-bottom:6px}
 .cell b{font-size:22px;letter-spacing:-.02em}
 
+/* run-the-numbers calculator */
+.calc2{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end;margin:0 0 12px}
+.calc2 label{display:block;font-family:var(--m);font-weight:600;font-size:11.5px;
+             letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin:0 0 8px}
+.calc2 input{width:100%;border:3px solid var(--ink);background:#fff;color:var(--ink);
+             padding:12px 13px;font-family:var(--m);font-weight:600;font-size:14px;outline:none}
+.calc2 input:focus{border-color:var(--red)}
+
 /* claim verifier */
 .verify{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end}
 .verify label{color:var(--mute)}
@@ -300,7 +308,7 @@ html.js .rv.vis{opacity:1;transform:none}
 
 <nav class="nav">
   <div class="wrap">
-    <a class="brand" href="#top"><img src="/assets/logo.png" alt=""><b>clip</b></a>
+    <a class="brand" href="#top"><img src="/assets/mark.png" alt=""><b>clip</b></a>
     <ul>
       <li><a href="#how">How it works</a></li>
       <li><a href="#rundown">Rundown</a></li>
@@ -453,6 +461,17 @@ html.js .rv.vis{opacity:1;transform:none}
         <div class="step"><i>0.490%</i><div><h4>To the hourly vault</h4>
           <p>Paid out to holders every hour in the stock the coin is paired to. Move the slider and these numbers change with it.</p></div></div>
       </div>
+      <div class="calc2">
+        <div>
+          <label for="cca">Run it on a coin that already trades</label>
+          <input id="cca" placeholder="0x… contract address on Robinhood Chain"
+                 value="0x32fad9f482eb629dc7cb078824763e59441ee076" spellcheck="false">
+        </div>
+        <button class="btn" id="ccb">Read it</button>
+      </div>
+      <div class="out mono" id="ccout">Reads 24h volume from Dexscreener and applies the split
+above. Nothing is estimated — if the pair has no volume, it says so.</div>
+
       <p class="note">Every coin on CLIP picks the stock its vault pays in. These are the
         six it can pick, read live — if a price is missing the page says so rather than guessing.</p>
       <div class="prices"><div class="prow" id="prow"></div></div>
@@ -725,6 +744,32 @@ const PAYS=['SPY','NVDA','TSLA','META','NFLX','COIN'];
     $('#proofNote').textContent='Read live from the Robinhood Chain explorer and Dexscreener. A dash means that number does not exist yet.';
   }catch(e){}
 })();
+
+/* ---------- run the split on a coin that already trades ---------- */
+async function runCoin(){
+  const ca=$('#cca').value.trim(), out=$('#ccout');
+  if(!/^0x[a-fA-F0-9]{40}$/.test(ca)){out.textContent='That is not a contract address.';return}
+  out.textContent='Reading '+ca.slice(0,10)+'… from the chain';
+  try{
+    const r=await fetch('/api/coin?ca='+encodeURIComponent(ca));
+    const j=r.ok?await r.json():null;
+    if(!j||j.exists===false){out.textContent='No pair found for that address.';return}
+    const v=j.volume24;
+    if(v==null){out.textContent=(j.name||ca)+' has no 24h volume on Dexscreener yet, so there is nothing to split.';return}
+    const share=+$('#fa2').value;
+    const creator=v*0.007, them=creator*share/100, vault=creator-them, pons=v*0.003;
+    const m=n=>'$'+Number(n).toLocaleString('en',{maximumFractionDigits:2});
+    out.textContent=
+      (j.name||'')+(j.symbol?'  ·  $'+j.symbol:'')+'\n'+
+      '24h volume    '+m(v)+'\n'+
+      'creator share '+m(creator)+'   (0.700%)\n'+
+      'to them       '+m(them)+'   ('+(0.7*share/100).toFixed(3)+'% at '+share+'%)\n'+
+      'to the vault  '+m(vault)+'   ('+(0.7-0.7*share/100).toFixed(3)+'%)\n'+
+      'to Pons       '+m(pons)+'   (0.300%)';
+  }catch(e){out.textContent='Could not reach the reader: '+e.message}
+}
+$('#ccb').addEventListener('click',runCoin);
+$('#cca').addEventListener('keydown',e=>{if(e.key==='Enter')runCoin()});
 
 /* ---------- claim verifier ---------- */
 $('#vb').addEventListener('click',()=>{
