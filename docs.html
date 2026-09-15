@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CLIP — docs</title>
+<meta name="description" content="How CLIP works, what every endpoint returns, and how to check a claim code yourself.">
+<link rel="icon" href="/assets/favicon-64.png">
+<style>
+@font-face{font-family:Nun;src:url('/assets/nunito.ttf') format('truetype');font-weight:400 1000;font-display:swap}
+@font-face{font-family:Plex;src:url('/assets/plexmono.ttf') format('truetype');font-weight:600;font-display:swap}
+:root{--lime:#a8f81b;--dot:#80ce10;--ink:#0e1606;--ink2:#1b2a0c;--paper:#fafaf4;
+      --red:#e8281e;--mute:#5d7a2a;--f:Nun,system-ui,sans-serif;--m:Plex,ui-monospace,monospace}
+*{box-sizing:border-box}
+html{overflow-x:hidden;scroll-behavior:smooth}
+body{overflow-x:clip;margin:0;background:var(--lime);color:var(--ink);font-family:var(--f);
+     font-weight:700;font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;
+     background-image:radial-gradient(var(--dot) 1.6px,transparent 1.7px);background-size:11px 11px}
+[hidden]{display:none!important}
+a{color:inherit}
+img{display:block;max-width:100%}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+section[id]{scroll-margin-top:90px}
+.nav{position:sticky;top:0;z-index:60;background:var(--ink);color:var(--paper)}
+.nav .in{max-width:1180px;margin:0 auto;padding:0 22px;height:64px;display:flex;
+         align-items:center;justify-content:space-between;gap:14px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.brand img{width:34px;height:34px}
+.brand b{font-size:23px;font-weight:1000}
+.btn{display:inline-flex;align-items:center;gap:8px;border:0;cursor:pointer;background:var(--lime);
+     color:var(--ink);padding:11px 17px;font-family:var(--m);font-weight:600;font-size:14.5px;
+     text-decoration:none;box-shadow:5px 5px 0 var(--ink2);transition:transform .12s,box-shadow .12s}
+.btn:hover{transform:translate(2px,2px);box-shadow:3px 3px 0 var(--ink2)}
+.btn.pap{background:var(--paper)}
+.shell{max-width:1180px;margin:0 auto;padding:40px 22px 70px;
+       display:grid;grid-template-columns:232px minmax(0,760px);gap:46px;align-items:start}
+.toc{position:sticky;top:88px}
+.toc ol{list-style:none;margin:0;padding:0;counter-reset:t}
+.toc a{display:block;padding:8px 10px;text-decoration:none;font-family:var(--m);
+       font-weight:600;font-size:13px;color:var(--mute)}
+.toc a:hover,.toc a.on{background:var(--ink);color:var(--paper)}
+h1{font-size:clamp(38px,5.2vw,60px);line-height:.95;letter-spacing:-.035em;font-weight:1000;margin:0 0 14px}
+.sub{font-family:var(--m);font-weight:600;font-size:14px;color:var(--mute);margin:0 0 34px}
+h2{font-size:29px;line-height:1.05;letter-spacing:-.025em;font-weight:1000;margin:0 0 14px}
+.rule{height:5px;background:var(--ink);margin:0 0 18px}
+section{margin:0 0 48px}
+p{margin:0 0 14px}
+code{font-family:var(--m);font-weight:600;font-size:14px;background:var(--paper);
+     border:2px solid var(--ink);padding:1px 6px}
+pre{font-family:var(--m);font-weight:600;font-size:13px;background:var(--ink);color:var(--paper);
+    padding:15px;overflow-x:auto;margin:0 0 16px}
+.steps{border:3px solid var(--ink);background:var(--paper);counter-reset:s}
+.st{display:grid;grid-template-columns:54px 1fr;gap:14px;padding:16px 18px;border-bottom:2px solid #d8dfc9}
+.st:last-child{border-bottom:0}
+.st::before{counter-increment:s;content:counter(s,decimal-leading-zero);font-family:var(--m);
+            font-weight:600;font-size:20px;color:var(--red)}
+.st h4{margin:0 0 4px;font-size:17px}
+.st p{margin:0;font-size:14.5px;color:var(--ink2)}
+table{width:100%;border-collapse:collapse;border:3px solid var(--ink);background:var(--paper)}
+th{background:var(--ink);color:var(--paper);text-align:left;padding:11px 13px;font-family:var(--m);
+   font-weight:600;font-size:11.5px;letter-spacing:.12em;text-transform:uppercase}
+td{padding:11px 13px;border-top:2px solid #d8dfc9;font-family:var(--m);font-weight:600;
+   font-size:13px;vertical-align:top}
+td .btn{padding:7px 12px;font-size:12.5px;box-shadow:3px 3px 0 var(--ink2)}
+.out{font-family:var(--m);font-weight:600;font-size:12.5px;background:var(--ink);color:var(--paper);
+     padding:13px;white-space:pre-wrap;word-break:break-all;margin-top:12px;max-height:250px;overflow:auto}
+.calc{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end}
+.calc input{border:3px solid var(--ink);background:var(--paper);padding:12px 13px;
+            font-family:var(--m);font-weight:600;font-size:15px;outline:none;width:100%}
+.calc label{display:block;font-family:var(--m);font-weight:600;font-size:11.5px;
+            letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-bottom:7px}
+.big{font-family:var(--m);font-weight:600;font-size:26px;background:var(--ink);color:var(--lime);
+     padding:15px;margin-top:12px;word-break:break-all}
+.warn{background:var(--red);color:#fff;padding:14px 16px;font-family:var(--m);font-weight:600;font-size:13.5px}
+.foot{background:var(--ink);color:#9dc45e;padding:20px;text-align:center;
+      font-family:var(--m);font-weight:600;font-size:12.5px}
+@media(max-width:920px){.shell{grid-template-columns:1fr;gap:24px}.toc{position:static}
+  .toc ol{display:flex;flex-wrap:wrap;gap:4px}.calc{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav class="nav"><div class="in">
+  <a class="brand" href="/"><img src="/assets/logo.png" alt=""><b>clip</b></a>
+  <a class="btn" href="/#slot">Take a slot ↗</a>
+</div></nav>
+
+<div class="shell">
+  <aside class="toc">
+    <ol>
+      <li><a href="#what">What CLIP is</a></li>
+      <li><a href="#slotrules">The slot</a></li>
+      <li><a href="#split">The split</a></li>
+      <li><a href="#claim">Claim codes</a></li>
+      <li><a href="#readers">Readers</a></li>
+      <li><a href="#chain">Not on chain yet</a></li>
+    </ol>
+  </aside>
+
+  <main>
+    <h1>How CLIP works.</h1>
+    <p class="sub">Every number on the site comes from one of the readers below. If you want to
+      check something yourself, this page gives you the endpoint and a button that calls it.</p>
+
+    <section id="what">
+      <div class="rule"></div>
+      <h2>What CLIP is</h2>
+      <p>One channel with one queue. A slot is an hour on that channel. You buy a slot and name
+        the X account whose clip airs in it. The account does not need a wallet, does not need
+        to agree in advance, and can claim its share afterwards with a code.</p>
+      <p>The point of the design is that the record is public. Every slot ever bought stays on
+        the rundown with the buyer, the hour and the amount, so nobody can claim a run that
+        never happened and nobody can quietly delete one that did.</p>
+    </section>
+
+    <section id="slotrules">
+      <div class="rule"></div>
+      <h2>The slot</h2>
+      <div class="steps">
+        <div class="st"><div><h4>One hour, one account</h4>
+          <p>A slot covers a single UTC hour. The countdown on the home page is the time left in
+            the current one.</p></div></div>
+        <div class="st"><div><h4>The handle is checked before you sign</h4>
+          <p>CLIP calls <code>/api/handle</code> and refuses to build a slot for an account that
+            does not exist. That check is public — you can run it below.</p></div></div>
+        <div class="st"><div><h4>The split is frozen at launch</h4>
+          <p>The share going to the person who aired is set when the coin is created and cannot
+            be changed afterwards, by us or by the creator.</p></div></div>
+        <div class="st"><div><h4>Nothing is reserved</h4>
+          <p>There is no team allocation. Liquidity is locked by the Pons hook, not by us.</p></div></div>
+      </div>
+    </section>
+
+    <section id="split">
+      <div class="rule"></div>
+      <h2>The split</h2>
+      <p>Pons charges <b>1.00%</b> on every trade and splits it 70 / 30. The 70% creator share —
+        <b>0.70%</b> of volume — is the only part CLIP touches. The other <b>0.300%</b> is the
+        protocol's and never reaches us.</p>
+      <pre>trade fee          1.000%   (Pons)
+  creator share    0.700%   (CLIP controls this)
+    to the person  0.210%   at the 30% default
+    to the vault   0.490%
+  protocol         0.300%   (Pons keeps this)</pre>
+      <p>Move the slider on the home page and those two middle numbers move with it. They always
+        add up to 0.700%.</p>
+    </section>
+
+    <section id="claim">
+      <div class="rule"></div>
+      <h2>Claim codes</h2>
+      <p>A code is FNV-1a over the string <code>clip:&lt;handle in lower case&gt;</code>, base-36,
+        upper-cased, last seven characters, prefixed <code>CLIP-</code>. It depends on nothing but
+        the handle, so anyone can compute it without us.</p>
+      <pre>let x = 0x811c9dc5;
+const s = 'clip:' + handle.toLowerCase();
+for (let i = 0; i &lt; s.length; i++) {
+  x ^= s.charCodeAt(i);
+  x = Math.imul(x, 0x01000193) &gt;&gt;&gt; 0;
+}
+return 'CLIP-' + x.toString(36).toUpperCase().padStart(7,'0').slice(-7);</pre>
+      <div class="calc">
+        <div><label for="ch">Handle</label><input id="ch" placeholder="@handle" value="@blknoiz06"></div>
+        <div><button class="btn" id="cb">Compute</button></div>
+      </div>
+      <div class="big" id="cout">—</div>
+    </section>
+
+    <section id="readers">
+      <div class="rule"></div>
+      <h2>Readers</h2>
+      <p>Four endpoints, no keys, no auth. Press a button and the real response appears below the
+        table — this page is not describing them from memory.</p>
+      <table>
+        <thead><tr><th>Endpoint</th><th>Returns</th><th>Try</th></tr></thead>
+        <tbody>
+          <tr><td>/api/handle?h=</td><td>handle, name, followers, verified, avatar, exists</td>
+            <td><button class="btn pap try" data-u="/api/handle?h=blknoiz06">Run</button></td></tr>
+          <tr><td>/api/avatar?h=</td><td>the account's profile image bytes, cached a day</td>
+            <td><button class="btn pap try" data-u="/api/avatar?h=blknoiz06" data-img="1">Run</button></td></tr>
+          <tr><td>/api/price?sym=</td><td>live price and change for a payable stock</td>
+            <td><button class="btn pap try" data-u="/api/price?sym=SPY">Run</button></td></tr>
+          <tr><td>/api/coin?ca=</td><td>holders, supply, market cap, liquidity, 24h volume</td>
+            <td><button class="btn pap try" data-u="/api/coin?ca=0x32fad9f482eb629dc7cb078824763e59441ee076">Run</button></td></tr>
+        </tbody>
+      </table>
+      <div class="out" id="rout">Nothing called yet.</div>
+    </section>
+
+    <section id="chain">
+      <div class="rule"></div>
+      <h2>Not on chain yet</h2>
+      <div class="warn" id="chainWarn">CLIP has no contract address. The rundown is empty, the
+        proof figures are dashes, and that is the truthful state. Anyone posting a contract
+        address before it appears on this site is scamming you.</div>
+    </section>
+  </main>
+</div>
+
+<footer class="foot">Not affiliated with any platform. Nobody who appears on the channel is
+  endorsing this coin.</footer>
+
+<script>
+const CONFIG={ca:'',x:'',pool:'',chart:'',launchpad:'https://ponsvault.com/launch'};
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+
+function code(h){
+  let x=0x811c9dc5; const s='clip:'+String(h).toLowerCase();
+  for(let i=0;i<s.length;i++){x^=s.charCodeAt(i);x=Math.imul(x,0x01000193)>>>0}
+  return 'CLIP-'+x.toString(36).toUpperCase().padStart(7,'0').slice(-7);
+}
+function calc(){
+  const h=$('#ch').value.replace(/^@/,'').trim();
+  $('#cout').textContent=/^[A-Za-z0-9_]{1,15}$/.test(h)?code(h):'Enter a valid X handle.';
+}
+$('#cb').addEventListener('click',calc);
+$('#ch').addEventListener('input',calc);
+$('#ch').addEventListener('keydown',e=>{if(e.key==='Enter')calc()});
+calc();
+
+$$('.try').forEach(b=>b.addEventListener('click',async()=>{
+  const out=$('#rout'), u=b.dataset.u;
+  out.textContent='GET '+u+' …';
+  try{
+    const r=await fetch(u);
+    if(b.dataset.img){
+      out.textContent='GET '+u+'\\n'+r.status+' '+(r.headers.get('content-type')||'')+
+        '\\n'+(r.ok?'image bytes returned — that is the avatar the site renders.':'no image');
+      return;
+    }
+    const t=await r.text();
+    let pretty=t; try{pretty=JSON.stringify(JSON.parse(t),null,2)}catch(e){}
+    out.textContent='GET '+u+'\\n'+r.status+'\\n\\n'+pretty;
+  }catch(e){out.textContent='GET '+u+'\\nrequest failed: '+e.message}
+}));
+
+(function(){
+  const links=$$('.toc a'), secs=links.map(a=>document.querySelector(a.getAttribute('href')));
+  if(!('IntersectionObserver' in window)) return;
+  const io=new IntersectionObserver(es=>es.forEach(e=>{
+    if(e.isIntersecting){const i=secs.indexOf(e.target);
+      links.forEach((l,k)=>l.classList.toggle('on',k===i))}
+  }),{rootMargin:'-40% 0px -55% 0px'});
+  secs.forEach(s=>s&&io.observe(s));
+})();
+
+if(CONFIG.ca){
+  $('#chainWarn').style.background='var(--ink)';
+  $('#chainWarn').textContent='CLIP is live at '+CONFIG.ca+
+    '. Anyone posting a different address is scamming you.';
+}
+</script>
+</body>
+</html>

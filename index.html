@@ -1,0 +1,716 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CLIP</title>
+<meta name="description" content="One channel. Pay to put your clip in front of everyone.">
+<meta property="og:title" content="CLIP — one channel, anyone can air">
+<meta property="og:description" content="Pay to put your clip in front of everyone. The queue is public.">
+<meta property="og:image" content="/assets/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/assets/favicon-64.png">
+<link rel="apple-touch-icon" href="/assets/favicon-180.png">
+<style>
+@font-face{font-family:Nun;src:url('/assets/nunito.ttf') format('truetype');font-weight:400 1000;font-display:swap}
+@font-face{font-family:Plex;src:url('/assets/plexmono.ttf') format('truetype');font-weight:600;font-display:swap}
+:root{
+  --lime:#a8f81b; --lime2:#95e00c; --dot:#80ce10;
+  --ink:#0e1606; --ink2:#1b2a0c; --paper:#fafaf4;
+  --red:#e8281e; --mute:#5d7a2a; --line:#0e1606;
+  --f:Nun,system-ui,-apple-system,Segoe UI,sans-serif;
+  --m:Plex,ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html{overflow-x:hidden;scroll-behavior:smooth}
+body{overflow-x:clip;margin:0;background:var(--lime);color:var(--ink);
+     font-family:var(--f);font-weight:700;font-size:16px;line-height:1.5;
+     -webkit-font-smoothing:antialiased;
+     background-image:radial-gradient(var(--dot) 1.6px,transparent 1.7px);
+     background-size:11px 11px}
+[hidden]{display:none!important}
+img{max-width:100%;display:block}
+a{color:inherit}
+button,input,select{font:inherit;color:inherit}
+section[id]{scroll-margin-top:86px}
+.wrap{max-width:1280px;margin:0 auto;padding:0 22px}
+.bleed{width:100vw;margin-left:calc(50% - 50vw)}
+.mono{font-family:var(--m);font-weight:600}
+
+/* ---------- nav: mark+wordmark left, links centred, accent right ---------- */
+.nav{position:sticky;top:0;z-index:60;background:var(--ink);color:var(--paper)}
+.nav .wrap{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+           gap:12px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.brand img{width:34px;height:34px;border-radius:0}
+.brand b{font-size:23px;font-weight:1000;letter-spacing:-.02em}
+.nav ul{list-style:none;display:flex;justify-content:center;gap:4px;margin:0;padding:0}
+.nav ul a{display:block;padding:8px 13px;text-decoration:none;font-size:14.5px;
+          font-family:var(--m);font-weight:600;color:#cfe7a8}
+.nav ul a:hover,.nav ul a.on{color:var(--paper);background:#22330e}
+.navr{justify-self:end}
+.btn{display:inline-flex;align-items:center;gap:8px;border:0;cursor:pointer;
+     font-family:var(--m);font-weight:600;font-size:14.5px;padding:11px 17px;
+     background:var(--lime);color:var(--ink);text-decoration:none;
+     box-shadow:5px 5px 0 var(--ink2);transition:transform .12s,box-shadow .12s}
+.btn:hover{transform:translate(2px,2px);box-shadow:3px 3px 0 var(--ink2)}
+.btn.red{background:var(--red);color:#fff}
+.btn.pap{background:var(--paper)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+/* ---------- hero ---------- */
+.hero{padding:54px 0 34px}
+.hgrid{display:grid;grid-template-columns:1.05fr .95fr;gap:46px;align-items:center}
+.kick{font-family:var(--m);font-weight:600;font-size:12.5px;letter-spacing:.16em;
+      text-transform:uppercase;color:var(--mute);margin:0 0 14px}
+h1{font-size:clamp(46px,6.4vw,86px);line-height:.92;letter-spacing:-.035em;
+   font-weight:1000;margin:0 0 20px}
+.lead{font-size:18.5px;font-weight:700;max-width:30em;margin:0 0 26px;color:var(--ink2)}
+.pill{display:flex;gap:0;max-width:440px;border:3px solid var(--ink);background:var(--paper)}
+.pill input{flex:1;min-width:0;border:0;background:transparent;padding:14px 15px;
+            font-family:var(--m);font-weight:600;font-size:15px;outline:none}
+.pill button{border:0;background:var(--ink);color:var(--paper);padding:0 20px;cursor:pointer;
+             font-family:var(--m);font-weight:600;font-size:14.5px}
+.pill button:hover{background:var(--red)}
+.try{font-family:var(--m);font-weight:600;font-size:13px;color:var(--mute);margin:12px 0 0}
+.try b{cursor:pointer;border-bottom:2px solid var(--mute);color:var(--ink2)}
+
+/* the flip card — the brand device, actually flipping */
+.stage{perspective:1400px;display:flex;justify-content:center}
+.flip{width:298px;height:372px;position:relative;transform-style:preserve-3d;
+      transition:transform .62s cubic-bezier(.5,.05,.2,1)}
+.flip.go{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;background:var(--paper);
+      border:3px solid var(--ink);box-shadow:16px 16px 0 var(--ink);padding:14px}
+.face.b{transform:rotateY(180deg)}
+.shot{width:100%;height:270px;object-fit:cover;border:2px solid var(--ink);background:#dfe6d2}
+.cap{display:flex;align-items:center;gap:9px;margin-top:11px}
+.tally{width:13px;height:13px;border-radius:50%;background:var(--red);flex:none}
+.cap .h{font-family:var(--m);font-weight:600;font-size:15px;overflow:hidden;
+        text-overflow:ellipsis;white-space:nowrap}
+.cap .n{margin-left:auto;font-family:var(--m);font-weight:600;font-size:13px;color:var(--mute)}
+.dots{display:flex;gap:6px;justify-content:center;margin-top:20px}
+.dots i{width:8px;height:8px;background:var(--ink);opacity:.25}
+.dots i.on{opacity:1;background:var(--red)}
+
+/* ---------- filmstrip marquee: cards, not text chips ---------- */
+.strip{background:var(--ink);padding:14px 0;overflow:hidden;border-top:3px solid var(--ink)}
+.srow{display:flex;gap:10px;width:max-content;animation:roll 42s linear infinite}
+.strip:hover .srow{animation-play-state:paused}
+@keyframes roll{to{transform:translateX(-50%)}}
+.sc{display:flex;align-items:center;gap:9px;background:var(--paper);padding:7px 12px 7px 7px;
+    margin-right:10px;cursor:pointer;border:2px solid var(--paper)}
+.sc:hover{border-color:var(--red)}
+.sc img{width:32px;height:32px;object-fit:cover;opacity:0;transition:opacity .3s}
+.sc img.ok{opacity:1}
+.sc span{font-family:var(--m);font-weight:600;font-size:13.5px;white-space:nowrap}
+
+/* ---------- the split: sticky channel rail + scrolling content ---------- */
+.split{display:grid;grid-template-columns:330px 1fr;gap:38px;padding:46px 0 10px;align-items:start}
+.rail{position:sticky;top:86px}
+.panel{background:var(--ink);color:var(--paper);padding:18px;box-shadow:9px 9px 0 var(--ink2)}
+.panel h3{margin:0 0 14px;font-family:var(--m);font-weight:600;font-size:12px;
+          letter-spacing:.16em;text-transform:uppercase;color:#9dc45e}
+.live{display:flex;gap:12px;align-items:center;padding-bottom:14px;border-bottom:2px solid #2c4212}
+.live img{width:62px;height:62px;object-fit:cover;background:#22330e;flex:none}
+.live .who{min-width:0}
+.live .who b{display:block;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.live .who span{font-family:var(--m);font-weight:600;font-size:12px;color:#9dc45e}
+.qlist{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:9px}
+.qlist li{display:flex;gap:10px;align-items:center;font-family:var(--m);
+          font-weight:600;font-size:13px}
+.qlist img{width:28px;height:28px;object-fit:cover;background:#22330e;flex:none}
+.qlist i{color:#9dc45e;font-style:normal;width:22px}
+.clock{display:flex;justify-content:space-between;align-items:baseline;margin-top:16px;
+       padding-top:14px;border-top:2px solid #2c4212;font-family:var(--m);font-weight:600}
+.clock b{font-size:26px}
+.clock span{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:#9dc45e}
+
+.blk{margin:0 0 54px}
+.blk h2{font-size:clamp(28px,3.4vw,42px);line-height:1;letter-spacing:-.03em;
+        font-weight:1000;margin:0 0 22px}
+.rule{height:5px;background:var(--ink);margin:0 0 22px}
+
+/* rundown table */
+.tbl{width:100%;border-collapse:collapse;background:var(--paper);border:3px solid var(--ink)}
+.tbl th{font-family:var(--m);font-weight:600;font-size:11.5px;letter-spacing:.12em;
+        text-transform:uppercase;text-align:left;padding:11px 13px;background:var(--ink);
+        color:var(--paper)}
+.tbl td{padding:12px 13px;border-top:2px solid #d8dfc9;font-family:var(--m);
+        font-weight:600;font-size:13.5px;vertical-align:middle}
+.tbl tr.empty td{text-align:center;color:var(--mute);padding:34px 14px;font-size:14px}
+.tbl .slot{width:78px;color:var(--mute)}
+
+/* steps */
+.steps{display:grid;gap:0;border:3px solid var(--ink);background:var(--paper)}
+.step{display:grid;grid-template-columns:var(--sw,62px) 1fr;gap:16px;padding:18px;
+      border-bottom:2px solid #d8dfc9}
+.step:last-child{border-bottom:0}
+.step i{font-family:var(--m);font-weight:600;font-style:normal;font-size:22px;color:var(--red)}
+.steps.pct{--sw:96px}
+.steps.pct .step i{font-size:18px}
+.step h4{margin:0 0 5px;font-size:18px}
+.step p{margin:0;font-size:14.5px;font-weight:600;color:var(--ink2)}
+
+/* form */
+.form{background:var(--ink);color:var(--paper);padding:24px;box-shadow:11px 11px 0 var(--ink2)}
+.form label{display:block;font-family:var(--m);font-weight:600;font-size:11.5px;
+            letter-spacing:.14em;text-transform:uppercase;color:#9dc45e;margin:0 0 8px}
+.form .row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+.form input,.form select{width:100%;border:3px solid var(--paper);background:transparent;
+        color:var(--paper);padding:12px 13px;font-family:var(--m);font-weight:600;font-size:15px;outline:none}
+.form input:focus,.form select:focus{border-color:var(--lime)}
+.form select option{background:var(--ink)}
+.slider{width:100%;accent-color:var(--lime);margin:6px 0 0}
+.out{background:#22330e;padding:15px;font-family:var(--m);font-weight:600;font-size:13.5px;
+     white-space:pre-wrap;word-break:break-word;min-height:54px}
+.splitbar{display:flex;height:34px;margin:14px 0 10px;border:2px solid var(--paper)}
+.splitbar div{display:flex;align-items:center;justify-content:center;font-family:var(--m);
+              font-weight:600;font-size:11.5px;overflow:hidden;white-space:nowrap}
+.sb1{background:var(--red);color:#fff}.sb2{background:var(--lime);color:var(--ink)}
+.sb3{background:var(--paper);color:var(--ink)}
+
+.note{font-family:var(--m);font-weight:600;font-size:13px;color:var(--mute);margin:14px 0 0}
+.warn{background:var(--red);color:#fff;padding:14px 16px;font-family:var(--m);
+      font-weight:600;font-size:13.5px;margin-top:18px}
+
+details{background:var(--paper);border:3px solid var(--ink);margin-bottom:-3px}
+summary{cursor:pointer;padding:15px 17px;font-size:17px;font-weight:1000;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";float:right;font-family:var(--m);color:var(--red)}
+details[open] summary::after{content:"–"}
+details p{margin:0;padding:0 17px 16px;font-size:14.5px;font-weight:600;color:var(--ink2)}
+
+/* live price strip */
+.prices{background:var(--ink);color:var(--paper);padding:0;overflow:hidden;margin:0 0 54px}
+.prow{display:flex;width:max-content;animation:roll 58s linear infinite}
+.prices:hover .prow{animation-play-state:paused}
+.pc{display:flex;align-items:baseline;gap:10px;padding:14px 22px;border-right:2px solid #2c4212;
+    font-family:var(--m);font-weight:600;font-size:13.5px;white-space:nowrap}
+.pc b{font-size:15px}
+.pc u{text-decoration:none;color:#9dc45e}
+.pc .up{color:var(--lime)}.pc .dn{color:#ff8b84}
+
+/* proof grid */
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:3px solid var(--ink);
+       background:var(--paper)}
+.cell{padding:16px 18px;border-right:2px solid #d8dfc9}
+.cell:last-child{border-right:0}
+.cell span{display:block;font-family:var(--m);font-weight:600;font-size:11px;
+           letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-bottom:6px}
+.cell b{font-size:22px;letter-spacing:-.02em}
+
+/* claim verifier */
+.verify{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end}
+.verify label{color:var(--mute)}
+.verify input{border:3px solid var(--ink);background:var(--paper);color:var(--ink);
+              padding:12px 13px;font-family:var(--m);font-weight:600;font-size:15px;
+              outline:none;width:100%}
+.vres{margin-top:14px;font-family:var(--m);font-weight:600;font-size:14px;padding:13px 15px;
+      background:var(--paper);border:3px solid var(--ink)}
+.vres.ok{background:var(--ink);color:var(--lime)}
+.vres.no{background:var(--red);color:#fff;border-color:var(--red)}
+
+/* mobile menu */
+.burger{display:none;background:transparent;border:2px solid #cfe7a8;color:#cfe7a8;
+        padding:8px 11px;font-family:var(--m);font-weight:600;cursor:pointer}
+.mmenu{display:none;background:var(--ink);border-top:2px solid #2c4212}
+.mmenu.open{display:block}
+.mmenu a{display:block;padding:14px 22px;color:#cfe7a8;text-decoration:none;
+         font-family:var(--m);font-weight:600;border-bottom:1px solid #22330e}
+
+:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+
+.foot{background:var(--ink);color:#9dc45e;padding:20px 0;margin-top:40px;
+      font-family:var(--m);font-weight:600;font-size:12.5px;text-align:center}
+
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(140%);
+       background:var(--ink);color:var(--paper);padding:13px 20px;font-family:var(--m);
+       font-weight:600;font-size:14px;z-index:90;transition:transform .3s}
+.toast.up{transform:translateX(-50%) translateY(0)}
+
+.rv{opacity:1}
+html.js .rv{opacity:0;transform:translateY(16px);transition:opacity .5s,transform .5s}
+html.js .rv.vis{opacity:1;transform:none}
+
+@media(max-width:980px){
+  .hgrid{grid-template-columns:1fr;gap:34px}
+  .split{grid-template-columns:1fr;gap:26px}
+  .rail{position:static}
+  .nav ul{display:none}
+  .nav .wrap{grid-template-columns:1fr auto auto;gap:10px}
+  .burger{display:block}
+  .grid4{grid-template-columns:1fr 1fr}
+  .cell:nth-child(2){border-right:0}
+  .cell:nth-child(1),.cell:nth-child(2){border-bottom:2px solid #d8dfc9}
+  .verify{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  .form .row{grid-template-columns:1fr}
+  .flip{width:258px;height:330px}
+  .shot{height:232px}
+  .tbl .hide{display:none}
+}
+</style>
+</head>
+<body>
+<script>document.documentElement.className='js'</script>
+
+<nav class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="/assets/logo.png" alt=""><b>clip</b></a>
+    <ul>
+      <li><a href="#how">How it works</a></li>
+      <li><a href="#rundown">Rundown</a></li>
+      <li><a href="#slot">Buy a slot</a></li>
+      <li><a href="#maths">The maths</a></li>
+      <li><a href="#proof">Proof</a></li>
+      <li><a href="#faq">FAQ</a></li>
+      <li><a href="/docs.html">Docs</a></li>
+    </ul>
+    <div class="navr"><a class="btn" id="navLaunch" href="#slot">Take a slot ↗</a></div>
+    <button class="burger" id="burger" aria-expanded="false" aria-controls="mmenu">Menu</button>
+  </div>
+  <div class="mmenu" id="mmenu">
+    <a href="#how">How it works</a><a href="#rundown">Rundown</a><a href="#slot">Buy a slot</a>
+    <a href="#maths">The maths</a><a href="#proof">Proof</a><a href="#faq">FAQ</a>
+    <a href="/docs.html">Docs</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap hgrid">
+    <div>
+      <p class="kick">One channel · Robinhood Chain</p>
+      <h1>Pay to put<br>your clip on.</h1>
+      <p class="lead">There is one screen and one queue. Buy the next slot and your clip airs to
+        everyone watching. Every slot ever bought stays on the rundown, so nobody can claim a
+        run that never happened.</p>
+      <div class="pill">
+        <input id="q" placeholder="@handle on X" autocomplete="off" spellcheck="false" aria-label="handle">
+        <button id="qb">Check</button>
+      </div>
+      <p class="try">Try <b data-h="blknoiz06">@blknoiz06</b> · <b data-h="cobie">@cobie</b> ·
+        <b data-h="KaiCenat">@KaiCenat</b> — read live from X, nothing stored.</p>
+    </div>
+    <div>
+      <div class="stage">
+        <div class="flip" id="flip">
+          <div class="face" id="fa">
+            <img class="shot" id="sa" alt="">
+            <div class="cap"><i class="tally"></i><span class="h" id="ha">—</span><span class="n" id="na"></span></div>
+          </div>
+          <div class="face b" id="fb">
+            <img class="shot" id="sb" alt="">
+            <div class="cap"><i class="tally"></i><span class="h" id="hb">—</span><span class="n" id="nb"></span></div>
+          </div>
+        </div>
+      </div>
+      <div class="dots" id="dots"></div>
+    </div>
+  </div>
+</header>
+
+<div class="strip bleed"><div class="srow" id="srow"></div></div>
+
+<div class="wrap split">
+
+  <!-- sticky channel rail: the channel keeps playing while you read -->
+  <aside class="rail">
+    <div class="panel">
+      <h3>On air now</h3>
+      <div class="live">
+        <img id="lav" alt="">
+        <div class="who"><b id="lname">—</b><span id="lhandle">—</span></div>
+      </div>
+      <ul class="qlist" id="qlist"></ul>
+      <div class="clock"><span>Next slot in</span><b id="cd">00:00</b></div>
+    </div>
+    <p class="note">The rail is a preview built from live X accounts. No slot has been
+      bought yet — the real queue fills from the chain.</p>
+  </aside>
+
+  <main>
+    <section class="blk rv" id="how">
+      <div class="rule"></div>
+      <h2>Four steps.<br>One screen.</h2>
+      <div class="steps">
+        <div class="step"><i>01</i><div><h4>Pick who airs</h4>
+          <p>Any X account. We check it exists before you sign — no wallet needed on their side.</p></div></div>
+        <div class="step"><i>02</i><div><h4>Buy the slot</h4>
+          <p>One Pons transaction. The slot is yours for the hour; the fee split is fixed at launch and cannot be changed after.</p></div></div>
+        <div class="step"><i>03</i><div><h4>It airs</h4>
+          <p>The clip goes on the one screen everybody is watching, and the slot is written to the rundown with the buyer, the hour and the amount.</p></div></div>
+        <div class="step"><i>04</i><div><h4>They can claim</h4>
+          <p>Whoever aired can claim their share by posting their code from the account. The code is derived from the handle, so anyone can check it without trusting us.</p></div></div>
+      </div>
+    </section>
+
+    <section class="blk rv" id="rundown">
+      <div class="rule"></div>
+      <h2>The rundown</h2>
+      <table class="tbl" id="tbl">
+        <thead><tr>
+          <th class="slot">Slot</th><th>Who aired</th>
+          <th class="hide">Bought by</th><th class="hide">Paid</th><th>Status</th>
+        </tr></thead>
+        <tbody id="tbody">
+          <tr class="empty"><td colspan="5">No slots have been bought yet.
+            The first hour on the channel is still open.</td></tr>
+        </tbody>
+      </table>
+      <p class="note">This table is written from the chain. It ships empty and stays empty
+        until a real slot is bought — nothing here is placeholder data.</p>
+    </section>
+
+    <section class="blk rv" id="slot">
+      <div class="rule"></div>
+      <h2>Take the next slot</h2>
+      <div class="form">
+        <div class="row">
+          <div>
+            <label for="fh">Who airs</label>
+            <input id="fh" placeholder="@handle" autocomplete="off" spellcheck="false">
+          </div>
+          <div>
+            <label for="fs">Paid in</label>
+            <select id="fs">
+              <option>SPY</option><option>NVDA</option><option>TSLA</option>
+              <option>META</option><option>NFLX</option><option>COIN</option>
+            </select>
+          </div>
+        </div>
+        <label for="fa2">How much of the creator fee goes to the person who aired
+          — <span id="shareTxt" class="mono">30%</span></label>
+        <input class="slider" id="fa2" type="range" min="10" max="90" value="30" step="5">
+        <div class="splitbar">
+          <div class="sb1" id="b1">THEM</div><div class="sb2" id="b2">VAULT</div><div class="sb3" id="b3">PROTOCOL</div>
+        </div>
+        <div class="out mono" id="fout">Enter a handle to see the real split and the claim code.</div>
+        <p style="margin:16px 0 0">
+          <button class="btn pap" id="fcheck">Check the handle</button>
+          <a class="btn red" id="flaunch" href="https://ponsvault.com/launch" target="_blank" rel="noopener">Open Pons ↗</a>
+        </p>
+      </div>
+    </section>
+
+    <section class="blk rv" id="maths">
+      <div class="rule"></div>
+      <h2>Where the money goes</h2>
+      <div class="steps pct">
+        <div class="step"><i>1.00%</i><div><h4>Pons takes one percent of every trade</h4>
+          <p>That is the protocol's own fee, not ours. It is split 70 / 30 between the creator and Pons.</p></div></div>
+        <div class="step"><i>0.70%</i><div><h4>The creator share is what CLIP controls</h4>
+          <p>All of the arithmetic below happens inside this 0.70%. The remaining 0.300% is the protocol's and never reaches us.</p></div></div>
+        <div class="step"><i>0.210%</i><div><h4>To whoever aired, at the default 30%</h4>
+          <p>Escrowed from the first trade and claimable with their code. If nobody claims it, it stays escrowed.</p></div></div>
+        <div class="step"><i>0.490%</i><div><h4>To the hourly vault</h4>
+          <p>Paid out to holders every hour in the stock the coin is paired to. Move the slider and these numbers change with it.</p></div></div>
+      </div>
+      <p class="note">Every coin on CLIP picks the stock its vault pays in. These are the
+        six it can pick, read live — if a price is missing the page says so rather than guessing.</p>
+      <div class="prices"><div class="prow" id="prow"></div></div>
+      <div class="warn" id="ca">No contract address yet. When CLIP is live the address appears at the
+        top of this page and in the pinned post. Anyone posting one before that is scamming you.</div>
+    </section>
+
+    <section class="blk rv" id="proof">
+      <div class="rule"></div>
+      <h2>Nothing here is invented</h2>
+      <div class="grid4" id="proofGrid">
+        <div class="cell"><span>Holders</span><b id="pHold">—</b></div>
+        <div class="cell"><span>Market cap</span><b id="pCap">—</b></div>
+        <div class="cell"><span>24h volume</span><b id="pVol">—</b></div>
+        <div class="cell"><span>Fees to the vault</span><b id="pFee">—</b></div>
+      </div>
+      <p class="note" id="proofNote">These four read from the Robinhood Chain explorer and
+        Dexscreener the moment a contract address exists. Until then they stay as dashes —
+        a dash is the honest number.</p>
+      <div style="margin-top:26px">
+        <div class="verify">
+          <div><label for="vh">Handle</label><input id="vh" placeholder="@handle"></div>
+          <div><label for="vc">Code they posted</label><input id="vc" placeholder="CLIP-XXXXXXX"></div>
+          <div><button class="btn" id="vb">Verify</button></div>
+        </div>
+        <div class="vres" id="vres">Codes are derived from the handle with FNV-1a. Check one
+          yourself — you do not have to trust us for this.</div>
+      </div>
+    </section>
+
+    <section class="blk rv" id="faq">
+      <div class="rule"></div>
+      <h2>Straight answers</h2>
+      <details><summary>Do I need the person's permission to air them?</summary>
+        <p>No, and they do not need a wallet. Their share accrues to an address only they can claim,
+          by posting a code from the account. If they never claim it, it stays there. CLIP is not
+          affiliated with any platform and nobody on the channel is endorsing it.</p></details>
+      <details><summary>What stops someone buying every slot?</summary>
+        <p>Nothing, and that is the point — the slot goes to whoever pays for it, and the rundown
+          shows exactly who bought what. Buying the whole day is expensive and completely public.</p></details>
+      <details><summary>How does someone claim?</summary>
+        <p>They post their code from the handle it was launched on. The code is derived from the
+          handle itself with FNV-1a, so anyone can check it without trusting us. Check a handle
+          above to see exactly what theirs would be.</p></details>
+      <details><summary>Where do the numbers on this page come from?</summary>
+        <p>Handles and avatars are read live from X. Volume and market cap come from Dexscreener,
+          holders from the Robinhood Chain explorer. Where a number does not exist yet, the page
+          says so instead of filling it in.</p></details>
+      <details><summary>Is the token live?</summary>
+        <p id="faqlive">Not yet. When it is, the contract address will appear at the top of this page
+          and in the pinned post. Anyone posting a contract address before it appears here is
+          scamming you.</p></details>
+    </section>
+  </main>
+</div>
+
+<footer class="foot">Not affiliated with any platform. Nobody who appears on the channel is
+  endorsing this coin.</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CONFIG={ca:'',x:'',pool:'',chart:'',launchpad:'https://ponsvault.com/launch'};
+
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const toast=(m)=>{const t=$('#toast');t.textContent=m;t.classList.add('up');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('up'),2400)};
+
+/* claim code: FNV-1a over 'clip:'+handle, so anyone can verify it offline */
+function code(h){
+  let x=0x811c9dc5; const s='clip:'+String(h).toLowerCase();
+  for(let i=0;i<s.length;i++){x^=s.charCodeAt(i);x=Math.imul(x,0x01000193)>>>0}
+  return 'CLIP-'+x.toString(36).toUpperCase().padStart(7,'0').slice(-7);
+}
+
+const CAST=['blknoiz06','KaiCenat','cobie','Ninja','notthreadguy','jack','xQc','Cristiano'];
+const hc={};
+async function handle(h){
+  if(hc[h]!==undefined) return hc[h];
+  try{const r=await fetch('/api/handle?h='+encodeURIComponent(h));
+      const j=r.ok?await r.json():null; hc[h]=j; return j}
+  catch(e){hc[h]=null; return null}
+}
+const avatar=h=>'/api/avatar?h='+encodeURIComponent(h);
+
+/* ---------- hero flip card ---------- */
+(function(){
+  const flip=$('#flip'); let i=0, back=false;
+  const dots=$('#dots');
+  CAST.forEach(()=>{const e=document.createElement('i');dots.append(e)});
+  const marks=[...dots.children];
+  async function paint(side,h){
+    const j=await handle(h);
+    $('#s'+side).src=avatar(h);
+    $('#h'+side).textContent='@'+h;
+    $('#n'+side).textContent=j&&j.followers!=null?Intl.NumberFormat('en',{notation:'compact'}).format(j.followers)+' followers':'';
+  }
+  paint('a',CAST[0]);
+  marks[0].classList.add('on');
+  let timer=setInterval(step,3800);
+  function step(){
+    const nx=(i+1)%CAST.length;
+    paint(back?'a':'b',CAST[nx]).then(()=>{
+      back=!back; flip.classList.toggle('go',back);
+      i=nx; marks.forEach((m,k)=>m.classList.toggle('on',k===i));
+    });
+  }
+  flip.addEventListener('mouseenter',()=>clearInterval(timer));
+  flip.addEventListener('mouseleave',()=>{timer=setInterval(step,3800)});
+})();
+
+/* ---------- filmstrip ---------- */
+(function(){
+  const row=$('#srow');
+  const make=h=>{
+    const a=document.createElement('div'); a.className='sc'; a.dataset.h=h;
+    const im=document.createElement('img'); im.referrerPolicy='no-referrer';
+    im.src=avatar(h); im.alt=''; im.onload=()=>im.classList.add('ok');
+    const s=document.createElement('span'); s.textContent='@'+h;
+    a.append(im,s); return a;
+  };
+  const all=[...CAST,'Asmongold','pokimanelol','LudwigAhgren','DrDisrespect','tim_cook'];
+  [...all,...all].forEach(h=>row.append(make(h)));
+  row.addEventListener('click',e=>{
+    const c=e.target.closest('.sc'); if(!c) return;
+    $('#q').value='@'+c.dataset.h; $('#fh').value='@'+c.dataset.h;
+    check(c.dataset.h); document.querySelector('#slot').scrollIntoView({behavior:'smooth'});
+  });
+})();
+
+/* ---------- sticky rail ---------- */
+(function(){
+  const list=$('#qlist');
+  handle(CAST[0]).then(j=>{
+    $('#lav').src=avatar(CAST[0]);
+    $('#lname').textContent=j&&j.name?j.name:'@'+CAST[0];
+    $('#lhandle').textContent='@'+CAST[0];
+  });
+  CAST.slice(1,6).forEach((h,k)=>{
+    const li=document.createElement('li');
+    const n=document.createElement('i'); n.textContent='#'+(k+2);
+    const im=document.createElement('img'); im.src=avatar(h); im.referrerPolicy='no-referrer'; im.alt='';
+    const s=document.createElement('span'); s.textContent='@'+h;
+    li.append(n,im,s); list.append(li);
+  });
+  const cd=$('#cd');
+  setInterval(()=>{
+    const now=new Date(), next=new Date(now); next.setUTCMinutes(60,0,0);
+    const d=Math.max(0,next-now), m=Math.floor(d/60000), s=Math.floor(d%60000/1000);
+    cd.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  },1000);
+})();
+
+/* ---------- handle check, shared by both inputs ---------- */
+async function check(h){
+  h=String(h||'').replace(/^@/,'').trim();
+  const out=$('#fout');
+  if(!/^[A-Za-z0-9_]{1,15}$/.test(h)){out.textContent='That is not a valid X handle.';return}
+  out.textContent='Checking @'+h+' on X…';
+  const j=await handle(h);
+  if(!j||j.exists===false){out.textContent='@'+h+' does not exist on X. Nothing to air.';return}
+  const share=+$('#fa2').value;
+  const them=(0.70*share/100), vault=(0.70-them);
+  out.textContent=
+    (j.name||('@'+h))+'  ·  @'+j.handle+
+    (j.followers!=null?'  ·  '+Intl.NumberFormat('en').format(j.followers)+' followers':'')+
+    '\nclaim code   '+code(j.handle)+
+    '\nthey get     '+them.toFixed(3)+'% of every trade'+
+    '\nhourly vault '+vault.toFixed(3)+'% of every trade'+
+    '\nprotocol     0.300% of every trade'+
+    '\n\nThey claim by posting that code from @'+j.handle+'.';
+}
+$('#qb').addEventListener('click',()=>{const v=$('#q').value;$('#fh').value=v;check(v);
+  $('#slot').scrollIntoView({behavior:'smooth'})});
+$('#q').addEventListener('keydown',e=>{if(e.key==='Enter')$('#qb').click()});
+$('#fcheck').addEventListener('click',()=>check($('#fh').value));
+$('#fh').addEventListener('keydown',e=>{if(e.key==='Enter')check($('#fh').value)});
+$$('.try b').forEach(b=>b.addEventListener('click',()=>{
+  $('#q').value='@'+b.dataset.h; $('#fh').value='@'+b.dataset.h; check(b.dataset.h);
+}));
+
+/* ---------- split bar reacts to the slider ---------- */
+function paintSplit(){
+  const share=+$('#fa2').value;
+  const them=0.70*share/100, vault=0.70-them;
+  $('#shareTxt').textContent=share+'%';
+  const tot=1.0;
+  $('#b1').style.flex=String(them/tot); $('#b1').textContent='THEM '+them.toFixed(3)+'%';
+  $('#b2').style.flex=String(vault/tot); $('#b2').textContent='VAULT '+vault.toFixed(3)+'%';
+  $('#b3').style.flex=String(0.300/tot); $('#b3').textContent='PONS 0.300%';
+  const h=$('#fh').value.replace(/^@/,'').trim();
+  if(/^[A-Za-z0-9_]{1,15}$/.test(h)&&hc[h]) check(h);
+}
+$('#fa2').addEventListener('input',paintSplit);
+paintSplit();
+
+/* ---------- nav active state ---------- */
+(function(){
+  // only in-page anchors: querySelector('/docs.html') throws and kills the script
+  const links=$$('.nav ul a').filter(a=>(a.getAttribute('href')||'').startsWith('#'));
+  const secs=links.map(a=>document.querySelector(a.getAttribute('href')));
+  const io=new IntersectionObserver(es=>es.forEach(e=>{
+    if(e.isIntersecting){const i=secs.indexOf(e.target);
+      links.forEach((l,k)=>l.classList.toggle('on',k===i))}
+  }),{rootMargin:'-45% 0px -50% 0px'});
+  secs.forEach(s=>s&&io.observe(s));
+})();
+
+/* ---------- CA wiring: everything switches on when CONFIG.ca is set ---------- */
+(function(){
+  if(!CONFIG.ca) return;
+  const w=$('#ca');
+  w.style.background='var(--ink)';
+  w.innerHTML='Contract address<br>'+CONFIG.ca+
+    ' <button class="btn pap" id="cacopy" style="margin-left:10px">Copy</button>';
+  $('#cacopy').addEventListener('click',()=>{
+    try{navigator.clipboard.writeText(CONFIG.ca)}catch(e){}
+    toast('Contract address copied');
+  });
+  $('#faqlive').innerHTML='Yes. CLIP is live on Robinhood Chain at <b>'+CONFIG.ca+
+    '</b> — the same address shown on this page and in the pinned post. Anyone posting a '+
+    'different address is scamming you.';
+})();
+
+/* ---------- live prices for the stocks a vault can pay in ---------- */
+const PAYS=['SPY','NVDA','TSLA','META','NFLX','COIN'];
+(async function(){
+  const row=$('#prow');
+  const cell=(sym,j)=>{
+    const d=document.createElement('div'); d.className='pc';
+    const ok=j&&j.price!=null;
+    const ch=ok&&j.change!=null?j.change:null;
+    d.innerHTML='<b>$'+sym+'</b><u>'+(ok?('$'+Number(j.price).toLocaleString('en',{maximumFractionDigits:2})):'price unavailable')+'</u>'+
+      (ch!=null?'<u class="'+(ch>=0?'up':'dn')+'">'+(ch>=0?'+':'')+ch.toFixed(2)+'%</u>':'');
+    return d;
+  };
+  const got=await Promise.allSettled(PAYS.map(s2=>
+    fetch('/api/price?sym='+s2).then(r=>r.ok?r.json():null).catch(()=>null)));
+  const cells=PAYS.map((s2,i)=>cell(s2,got[i].status==='fulfilled'?got[i].value:null));
+  cells.forEach(c=>row.append(c));
+  cells.forEach(c=>row.append(c.cloneNode(true)));   // duplicate: seamless marquee
+})();
+
+/* ---------- proof: reads the chain only once a CA exists ---------- */
+(async function(){
+  if(!CONFIG.ca) return;
+  try{
+    const r=await fetch('/api/coin?ca='+encodeURIComponent(CONFIG.ca));
+    if(!r.ok) return;
+    const j=await r.json();
+    const n=(v,p)=>v==null?'—':(p||'')+Number(v).toLocaleString('en',{maximumFractionDigits:0});
+    $('#pHold').textContent=j.holders==null?'—':n(j.holders);
+    $('#pCap').textContent=n(j.marketCap,'$');
+    $('#pVol').textContent=n(j.volume24,'$');
+    $('#pFee').textContent=j.volume24==null?'—':'$'+Number(j.volume24*0.0049).toLocaleString('en',{maximumFractionDigits:0});
+    if(j.holders==null){
+      // Blockscout 403s server-side; the browser can read it, so retry from here
+      for(let k=0;k<2;k++){
+        await new Promise(r2=>setTimeout(r2,900));
+        try{const b=await fetch('https://robinhoodchain.blockscout.com/api/v2/tokens/'+CONFIG.ca);
+            if(b.ok){const bj=await b.json();
+              if(bj.holders){$('#pHold').textContent=n(bj.holders);break}}}catch(e){}
+      }
+    }
+    $('#proofNote').textContent='Read live from the Robinhood Chain explorer and Dexscreener. A dash means that number does not exist yet.';
+  }catch(e){}
+})();
+
+/* ---------- claim verifier ---------- */
+$('#vb').addEventListener('click',()=>{
+  const h=$('#vh').value.replace(/^@/,'').trim();
+  const c=$('#vc').value.trim().toUpperCase();
+  const box=$('#vres'); box.className='vres';
+  if(!/^[A-Za-z0-9_]{1,15}$/.test(h)){box.textContent='Enter a valid X handle first.';return}
+  const want=code(h);
+  if(!c){box.textContent='@'+h+' would claim with '+want+'.';return}
+  if(c===want){box.classList.add('ok');box.textContent='Match. '+want+' is the code for @'+h+'.'}
+  else{box.classList.add('no');box.textContent='No match. @'+h+' claims with '+want+', not '+c+'.'}
+});
+$('#vc').addEventListener('keydown',e=>{if(e.key==='Enter')$('#vb').click()});
+$('#vh').addEventListener('keydown',e=>{if(e.key==='Enter')$('#vb').click()});
+
+/* ---------- mobile menu ---------- */
+(function(){
+  const b=$('#burger'), m=$('#mmenu');
+  b.addEventListener('click',()=>{
+    const open=m.classList.toggle('open');
+    b.setAttribute('aria-expanded',String(open));
+  });
+  m.addEventListener('click',e=>{if(e.target.tagName==='A'){m.classList.remove('open');
+    b.setAttribute('aria-expanded','false')}});
+})();
+
+/* ---------- reveal ---------- */
+if('IntersectionObserver' in window){
+  const io2=new IntersectionObserver(es=>es.forEach(e=>{
+    if(e.isIntersecting){e.target.classList.add('vis');io2.unobserve(e.target)}
+  }),{threshold:0,rootMargin:'0px 0px -8% 0px'});
+  $$('.rv').forEach(e=>io2.observe(e));
+  // belt and braces: nothing may stay invisible if the observer never fires
+  setTimeout(()=>$$('.rv').forEach(e=>e.classList.add('vis')),2500);
+}else{
+  document.documentElement.classList.remove('js');
+}
+</script>
+</body>
+</html>
