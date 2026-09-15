@@ -106,7 +106,8 @@ h1{font-size:clamp(46px,6.4vw,86px);line-height:.92;letter-spacing:-.035em;
 .sc span{font-family:var(--m);font-weight:600;font-size:13.5px;white-space:nowrap}
 
 /* ---------- the split: sticky channel rail + scrolling content ---------- */
-.split{display:grid;grid-template-columns:330px 1fr;gap:38px;padding:46px 0 10px;align-items:start}
+.split{display:grid;grid-template-columns:330px minmax(0,1fr);gap:38px;padding:46px 0 10px;align-items:start}
+.split>main{min-width:0}
 .rail{position:sticky;top:86px}
 .panel{background:var(--ink);color:var(--paper);padding:18px;box-shadow:9px 9px 0 var(--ink2)}
 .panel h3{margin:0 0 14px;font-family:var(--m);font-weight:600;font-size:12px;
@@ -129,10 +130,33 @@ h1{font-size:clamp(46px,6.4vw,86px);line-height:.92;letter-spacing:-.035em;
 .blk{margin:0 0 54px}
 .blk h2{font-size:clamp(28px,3.4vw,42px);line-height:1;letter-spacing:-.03em;
         font-weight:1000;margin:0 0 22px}
-.rule{height:5px;background:var(--ink);margin:0 0 22px}
+.shead{display:flex;align-items:flex-end;gap:15px;margin:0 0 26px;
+       border-bottom:6px solid var(--ink);padding-bottom:13px}
+.shead i{font-family:var(--m);font-weight:600;font-style:normal;font-size:14px;color:var(--red);
+         border:3px solid var(--ink);background:var(--paper);padding:5px 9px;flex:none;margin-bottom:5px}
+.shead h2{margin:0}
+
+/* full-bleed statement band between the hero and the body */
+.band{background:var(--ink);color:var(--paper);padding:62px 0;margin:0 0 4px}
+.bandin p{margin:0;font-size:clamp(34px,5.6vw,74px);line-height:.94;letter-spacing:-.035em;
+          font-weight:1000}
+.bandin p.hi{color:var(--lime)}
+.bandin .sm{font-family:var(--m);font-weight:600;font-size:14px;letter-spacing:.14em;
+            text-transform:uppercase;color:#9dc45e;margin:0 0 22px;font-size:13px}
+
+/* closing call, in place of a footer */
+.end{background:var(--ink);padding:56px 0;margin-top:40px}
+.endin{display:flex;align-items:center;justify-content:space-between;gap:26px;flex-wrap:wrap}
+.endin h3{margin:0;font-size:clamp(28px,4vw,48px);line-height:1;letter-spacing:-.03em;
+          font-weight:1000;color:var(--paper)}
+.endin p{margin:8px 0 0;font-family:var(--m);font-weight:600;font-size:13px;color:#9dc45e}
+
+/* printed blocks sit on the page rather than float */
+.steps,.grid4{box-shadow:11px 11px 0 var(--ink)}
 
 /* rundown table */
-.tbl{width:100%;border-collapse:collapse;background:var(--paper);border:3px solid var(--ink)}
+.tblwrap{overflow-x:auto;box-shadow:11px 11px 0 var(--ink)}
+.tbl{width:100%;min-width:520px;border-collapse:collapse;background:var(--paper);border:3px solid var(--ink)}
 .tbl th{font-family:var(--m);font-weight:600;font-size:11.5px;letter-spacing:.12em;
         text-transform:uppercase;text-align:left;padding:11px 13px;background:var(--ink);
         color:var(--paper)}
@@ -281,7 +305,6 @@ html.js .rv.vis{opacity:1;transform:none}
 <header class="hero" id="top">
   <div class="wrap hgrid">
     <div>
-      <p class="kick">One channel · Robinhood Chain</p>
       <h1>Pay to put<br>your clip on.</h1>
       <p class="lead">There is one screen and one queue. Buy the next slot and your clip airs to
         everyone watching. Every slot ever bought stays on the rundown, so nobody can claim a
@@ -313,6 +336,15 @@ html.js .rv.vis{opacity:1;transform:none}
 
 <div class="strip bleed"><div class="srow" id="srow"></div></div>
 
+<section class="band">
+  <div class="wrap bandin">
+    <p class="sm">Robinhood Chain</p>
+    <p>One screen.</p>
+    <p>One hour at a time.</p>
+    <p class="hi">Anyone can buy it.</p>
+  </div>
+</section>
+
 <div class="wrap split">
 
   <!-- sticky channel rail: the channel keeps playing while you read -->
@@ -332,8 +364,7 @@ html.js .rv.vis{opacity:1;transform:none}
 
   <main>
     <section class="blk rv" id="how">
-      <div class="rule"></div>
-      <h2>Four steps.<br>One screen.</h2>
+      <div class="shead"><i>01</i><h2>Four steps.<br>One screen.</h2></div>
       <div class="steps">
         <div class="step"><i>01</i><div><h4>Pick who airs</h4>
           <p>Any X account. We check it exists before you sign — no wallet needed on their side.</p></div></div>
@@ -347,9 +378,8 @@ html.js .rv.vis{opacity:1;transform:none}
     </section>
 
     <section class="blk rv" id="rundown">
-      <div class="rule"></div>
-      <h2>The rundown</h2>
-      <table class="tbl" id="tbl">
+      <div class="shead"><i>02</i><h2>The rundown</h2></div>
+      <div class="tblwrap"><table class="tbl" id="tbl">
         <thead><tr>
           <th class="slot">Slot</th><th>Who aired</th>
           <th class="hide">Bought by</th><th class="hide">Paid</th><th>Status</th>
@@ -358,14 +388,13 @@ html.js .rv.vis{opacity:1;transform:none}
           <tr class="empty"><td colspan="5">No slots have been bought yet.
             The first hour on the channel is still open.</td></tr>
         </tbody>
-      </table>
+      </table></div>
       <p class="note">This table is written from the chain. It ships empty and stays empty
         until a real slot is bought — nothing here is placeholder data.</p>
     </section>
 
     <section class="blk rv" id="slot">
-      <div class="rule"></div>
-      <h2>Take the next slot</h2>
+      <div class="shead"><i>03</i><h2>Take the next slot</h2></div>
       <div class="form">
         <div class="row">
           <div>
@@ -395,8 +424,7 @@ html.js .rv.vis{opacity:1;transform:none}
     </section>
 
     <section class="blk rv" id="maths">
-      <div class="rule"></div>
-      <h2>Where the money goes</h2>
+      <div class="shead"><i>04</i><h2>Where the money goes</h2></div>
       <div class="steps pct">
         <div class="step"><i>1.00%</i><div><h4>Pons takes one percent of every trade</h4>
           <p>That is the protocol's own fee, not ours. It is split 70 / 30 between the creator and Pons.</p></div></div>
@@ -415,8 +443,7 @@ html.js .rv.vis{opacity:1;transform:none}
     </section>
 
     <section class="blk rv" id="proof">
-      <div class="rule"></div>
-      <h2>Nothing here is invented</h2>
+      <div class="shead"><i>05</i><h2>Nothing here is invented</h2></div>
       <div class="grid4" id="proofGrid">
         <div class="cell"><span>Holders</span><b id="pHold">—</b></div>
         <div class="cell"><span>Market cap</span><b id="pCap">—</b></div>
@@ -438,8 +465,7 @@ html.js .rv.vis{opacity:1;transform:none}
     </section>
 
     <section class="blk rv" id="faq">
-      <div class="rule"></div>
-      <h2>Straight answers</h2>
+      <div class="shead"><i>06</i><h2>Straight answers</h2></div>
       <details><summary>Do I need the person's permission to air them?</summary>
         <p>No, and they do not need a wallet. Their share accrues to an address only they can claim,
           by posting a code from the account. If they never claim it, it stays there. CLIP is not
@@ -463,8 +489,15 @@ html.js .rv.vis{opacity:1;transform:none}
   </main>
 </div>
 
-<footer class="foot">Not affiliated with any platform. Nobody who appears on the channel is
-  endorsing this coin.</footer>
+<section class="end">
+  <div class="wrap endin">
+    <div>
+      <h3>The next hour is open.</h3>
+      <p>No contract address yet — anyone posting one before it appears here is scamming you.</p>
+    </div>
+    <a class="btn" href="#slot">Take the slot ↗</a>
+  </div>
+</section>
 
 <div class="toast" id="toast"></div>
 
